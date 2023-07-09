@@ -58,23 +58,30 @@ func getRequest(urlArr []string) []string {
 	responsesBodies := []string{}
 
 	for i, url := range urlArr {
+		err := func() error {
+			resp, err := http.Get(url)
+			if err != nil {
+				//todo fix
+				fmt.Printf("Error making a request to: %s\n", url)
+				return err
+			}
+			defer resp.Body.Close()
 
-		resp, err := http.Get(url)
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Printf("Something went wrong, %s\n", err)
+				return err
+			}
+			stringBody := string(body)
+			responsesBodies = append(responsesBodies, stringBody)
+			fmt.Printf("%s : %s/n", url, stringBody)
+			_ = i
+			return nil
+		}()
 		if err != nil {
-			//todo fix
-			fmt.Printf("Error making a request to: %s\n", url)
+			fmt.Printf("Error processing url %s: %v", url, err)
 			continue
 		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Printf("Something went wrong, %s\n", err)
-			continue
-		}
-		stringBody := string(body)
-		responsesBodies = append(responsesBodies, stringBody)
-		fmt.Printf("%s : %s/n", url, stringBody)
-		_ = i
 	}
 
 	return responsesBodies
